@@ -59,29 +59,63 @@ class ContactCard extends StatelessWidget {
             ),
           ),
         ),
-        trailing: PopupMenuButton<String>(
-          icon: const Icon(
-            Icons.more_vert,
-            color: AppColors.textSecondary,
-          ),
-          onSelected: (value) {
-            switch (value) {
-              case 'edit':
-                onEdit?.call();
-                break;
-              case 'delete':
-                onDelete?.call();
-                break;
-            }
-          },
-          itemBuilder: (context) => const [
-            PopupMenuItem<String>(
-              value: 'edit',
-              child: Text('Edit'),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: "Call",
+              icon: const Icon(
+                Icons.call,
+                color: Colors.green,
+              ),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      "Calling feature coming soon.",
+                    ),
+                  ),
+                );
+              },
             ),
-            PopupMenuItem<String>(
-              value: 'delete',
-              child: Text('Delete'),
+            IconButton(
+              tooltip: "Message",
+              icon: const Icon(
+                Icons.message,
+                color: AppColors.accent,
+              ),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      "Messaging feature coming soon.",
+                    ),
+                  ),
+                );
+              },
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'edit':
+                    onEdit?.call();
+                    break;
+
+                  case 'delete':
+                    onDelete?.call();
+                    break;
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem<String>(
+                  value: 'edit',
+                  child: Text('Edit'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Text('Delete'),
+                ),
+              ],
             ),
           ],
         ),

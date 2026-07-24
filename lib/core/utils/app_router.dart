@@ -56,7 +56,7 @@ class AppRouter {
 
       case AppRoutes.otp:
         return MaterialPageRoute(
-          builder: (_) => const OTPScreen(),
+          builder: (_) => const OtpScreen(),
         );
 
       case AppRoutes.resetPassword:
@@ -76,7 +76,7 @@ class AppRouter {
 
       case AppRoutes.sos:
         return MaterialPageRoute(
-          builder: (_) => const SOSScreen(),
+          builder: (_) => const SosScreen(),
         );
 
       case AppRoutes.countdown:

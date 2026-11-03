@@ -41,8 +41,25 @@ import 'screens/settings/settings_screen.dart';
 
 // Profile
 import 'screens/profile/profile_screen.dart';
+import 'screens/emergency/emergency_message_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'screens/mesh/mesh_test_screen.dart';
 
-void main() {
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') {
+      rethrow;
+    }
+  }
+
   runApp(const ConnectSafeApp());
 }
 
@@ -74,6 +91,12 @@ class ConnectSafeApp extends StatelessWidget {
         // Permissions
         '/permissions': (context) => const PermissionsScreen(),
 
+        '/emergency-message': (context) =>
+        const EmergencyMessageScreen(
+          emergencyType: 'GENERAL',
+          incidentTitle: 'Emergency',
+        ),
+
         // Home
         '/home': (context) => const HomeScreen(),
 
@@ -89,6 +112,9 @@ class ConnectSafeApp extends StatelessWidget {
 
         // Nearby Help
         '/nearby-help': (context) => const NearbyHelpScreen(),
+
+        // Mesh Network
+        '/mesh-test': (context) => const MeshTestScreen(),
 
         // AI
         '/ai': (context) => const AIAssistantScreen(),

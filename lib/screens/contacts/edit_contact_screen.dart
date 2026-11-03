@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../services/emergency_contact_service.dart';
 
 class EditContactScreen extends StatefulWidget {
+  final int id;
   final String name;
   final String phone;
 
   const EditContactScreen({
     super.key,
+    required this.id,
     required this.name,
     required this.phone,
   });
@@ -43,19 +46,40 @@ class _EditContactScreenState extends State<EditContactScreen> {
     super.dispose();
   }
 
-  void updateContact() {
+  Future<void> updateContact() async {
     FocusScope.of(context).unfocus();
 
-    if (_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    try {
+      await EmergencyContactService.instance.updateContact(
+        id: widget.id,
+        name: nameController.text.trim(),
+        phone: phoneController.text.trim(),
+        relationship: 'Emergency Contact',
+      );
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            "Contact Updated (Backend Pending)",
-          ),
+          content: Text("Contact updated successfully"),
+          backgroundColor: Colors.green,
         ),
       );
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to update contact: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

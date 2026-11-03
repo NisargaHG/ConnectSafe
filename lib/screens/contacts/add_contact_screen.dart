@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../services/emergency_contact_service.dart';
 
 class AddContactScreen extends StatefulWidget {
   const AddContactScreen({super.key});
@@ -23,17 +24,39 @@ class _AddContactScreenState extends State<AddContactScreen> {
     super.dispose();
   }
 
-  void saveContact() {
+  Future<void> saveContact() async {
     FocusScope.of(context).unfocus();
 
-    if (_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    try {
+      await EmergencyContactService.instance.addContact(
+        name: nameController.text.trim(),
+        phone: phoneController.text.trim(),
+        relationship: 'Emergency Contact',
+      );
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Contact Saved (Backend Pending)"),
+          content: Text("Contact saved successfully"),
+          backgroundColor: Colors.green,
         ),
       );
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to save contact: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

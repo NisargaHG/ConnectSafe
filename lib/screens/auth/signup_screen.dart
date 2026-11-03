@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../services/api_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -29,6 +30,52 @@ class _SignupScreenState extends State<SignupScreen> {
     passwordController.dispose();
     confirmPasswordController.dispose();
     super.dispose();
+  }
+  Future<void> signup() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    try {
+      debugPrint('REGISTER REQUEST STARTED');
+
+      final response = await ApiService.instance.post(
+        'register/',
+        {
+          'username': nameController.text.trim(),
+          'email': emailController.text.trim(),
+          'phone_number': phoneController.text.trim(),
+          'password': passwordController.text,
+        },
+      );
+
+      debugPrint('REGISTER RESPONSE: $response');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account created successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pushReplacementNamed(
+        context,
+        '/login',
+      );
+    } catch (e) {
+      debugPrint('REGISTER FAILED: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Registration failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   InputDecoration inputDecoration(
@@ -260,14 +307,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   height: 56,
 
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          "/login",
-                        );
-                      }
-                    },
+                    onPressed: signup,
 
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,

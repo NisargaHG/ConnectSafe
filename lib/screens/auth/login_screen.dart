@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../services/auth_service.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,10 +13,14 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController =
+  TextEditingController();
+
+  final TextEditingController passwordController =
+  TextEditingController();
 
   bool hidePassword = true;
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -32,16 +38,14 @@ class _LoginScreenState extends State<LoginScreen> {
       labelText: label,
       prefixIcon: Icon(icon),
       suffixIcon: suffix,
-
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
       ),
-
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide:
+        const BorderSide(color: AppColors.border),
       ),
-
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: const BorderSide(
@@ -49,7 +53,6 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 2,
         ),
       ),
-
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: const BorderSide(
@@ -57,7 +60,6 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 1.5,
         ),
       ),
-
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: const BorderSide(
@@ -66,6 +68,41 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> login() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final error = await AuthService.instance.signIn(
+      email: emailController.text.trim(),
+      password: passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (error == null) {
+      Navigator.pushReplacementNamed(
+        context,
+        "/permissions",
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -94,7 +131,8 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
 
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
 
               children: [
                 const SizedBox(height: 20),
@@ -122,11 +160,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 TextFormField(
                   controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration:
-                  inputDecoration("Email", Icons.email_outlined),
+                  keyboardType:
+                  TextInputType.emailAddress,
+                  decoration: inputDecoration(
+                    "Email",
+                    Icons.email_outlined,
+                  ),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
+                    if (value == null ||
+                        value.trim().isEmpty) {
                       return "Email is required";
                     }
 
@@ -156,13 +198,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       onPressed: () {
                         setState(() {
-                          hidePassword = !hidePassword;
+                          hidePassword =
+                          !hidePassword;
                         });
                       },
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null ||
+                        value.isEmpty) {
                       return "Password is required";
                     }
 
@@ -202,28 +246,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 56,
 
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          "/permissions",
-                        );
-                      }
-                    },
+                    onPressed:
+                    isLoading ? null : login,
 
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor:
+                      AppColors.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
+                      shape:
+                      RoundedRectangleBorder(
+                        borderRadius:
+                        BorderRadius.circular(18),
                       ),
                     ),
 
-                    child: const Text(
+                    child: isLoading
+                        ? const CircularProgressIndicator(
+                      color: Colors.white,
+                    )
+                        : const Text(
                       "Login",
                       style: TextStyle(
                         fontSize: 17,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                        FontWeight.bold,
                       ),
                     ),
                   ),
@@ -232,17 +278,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 24),
 
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment:
+                  MainAxisAlignment.center,
                   children: [
                     const Text(
                       "Don't have an account?",
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color:
+                        AppColors.textSecondary,
                       ),
                     ),
+
                     TextButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(
+                        Navigator
+                            .pushReplacementNamed(
                           context,
                           "/signup",
                         );
@@ -251,7 +301,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         "Create Account",
                         style: TextStyle(
                           color: AppColors.accent,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                          FontWeight.bold,
                         ),
                       ),
                     ),

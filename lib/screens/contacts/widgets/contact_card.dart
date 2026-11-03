@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
 class ContactCard extends StatelessWidget {
+  final int id;
   final String name;
   final String phone;
   final VoidCallback? onEdit;
@@ -9,6 +10,7 @@ class ContactCard extends StatelessWidget {
 
   const ContactCard({
     super.key,
+    required this.id,
     required this.name,
     required this.phone,
     this.onEdit,

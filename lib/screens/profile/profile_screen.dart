@@ -1,24 +1,66 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../services/auth_service.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Map<String, dynamic>? profile;
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfile();
+  }
+
+  Future<void> loadProfile() async {
+    try {
+      final result = await AuthService.instance.getProfile();
+
+      if (!mounted) return;
+
+      setState(() {
+        profile = result;
+        isLoading = false;
+      });
+
+      debugPrint('PROFILE SCREEN: $result');
+    } catch (e) {
+      debugPrint('PROFILE LOAD FAILED: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+        errorMessage = e.toString();
+      });
+    }
+  }
 
   void _editProfile(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text(
-          "Edit Profile (Coming Soon)",
-        ),
+        content: Text("Edit Profile coming soon."),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final username = profile?['username']?.toString() ?? '';
+    final email = profile?['email']?.toString() ?? '';
+
     return Scaffold(
       backgroundColor: AppColors.background,
+
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -31,44 +73,41 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
+
+      body: isLoading
+          ? const Center(
+        child: CircularProgressIndicator(),
+      )
+          : errorMessage != null
+          ? Center(
+        child: Text(
+          'Failed to load profile',
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+          ),
+        ),
+      )
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(20),
+
         child: Column(
           children: [
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                const CircleAvatar(
-                  radius: 55,
-                  backgroundColor: AppColors.primary,
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 60,
-                  ),
-                ),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: AppColors.surface,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: Icon(
-                      Icons.edit,
-                      size: 18,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
+
+            const CircleAvatar(
+              radius: 55,
+              backgroundColor: AppColors.primary,
+              child: Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 60,
+              ),
             ),
 
             const SizedBox(height: 16),
 
-            const Text(
-              "Jane Doe",
-              style: TextStyle(
+            Text(
+              username,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
@@ -77,9 +116,9 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 6),
 
-            const Text(
-              "jane.doe@email.com",
-              style: TextStyle(
+            Text(
+              email,
+              style: const TextStyle(
                 fontSize: 16,
                 color: AppColors.textSecondary,
               ),
@@ -90,25 +129,25 @@ class ProfileScreen extends StatelessWidget {
             _profileTile(
               icon: Icons.phone_outlined,
               title: "Phone Number",
-              value: "+91 9876543210",
+              value: "Not available",
             ),
 
             _profileTile(
               icon: Icons.home_outlined,
               title: "Address",
-              value: "Bengaluru, Karnataka",
+              value: "Not available",
             ),
 
             _profileTile(
               icon: Icons.bloodtype_outlined,
               title: "Blood Group",
-              value: "O+",
+              value: "Not available",
             ),
 
             _profileTile(
               icon: Icons.contacts_outlined,
               title: "Emergency Contacts",
-              value: "2 Contacts Added",
+              value: "Not available",
             ),
 
             _profileTile(
@@ -128,7 +167,8 @@ class ProfileScreen extends StatelessWidget {
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius:
+                    BorderRadius.circular(14),
                   ),
                 ),
                 icon: const Icon(Icons.edit),
@@ -164,7 +204,8 @@ class ProfileScreen extends StatelessWidget {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppColors.primary.withOpacity(0.1),
+          backgroundColor:
+          AppColors.primary.withOpacity(0.1),
           child: Icon(
             icon,
             color: AppColors.primary,

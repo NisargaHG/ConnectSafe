@@ -1,75 +1,84 @@
 import 'package:flutter/foundation.dart';
+import 'api_service.dart';
 
 class AuthService {
-  bool _loggedIn = false;
-  String? _userEmail;
+  AuthService._();
 
-  bool get isLoggedIn => _loggedIn;
+  static final AuthService instance = AuthService._();
 
-  String? get currentUserEmail => _userEmail;
+  final ApiService _api = ApiService.instance;
 
-  Future<bool> login({
+  String? _token;
+  String? _username;
+  String? _email;
+
+  bool get isLoggedIn => _token != null;
+
+  String? get currentUsername => _username;
+
+  String? get currentUserEmail => _email;
+
+  String? get token => _token;
+
+  Future<String?> signIn({
     required String email,
     required String password,
   }) async {
-    // TODO: Replace with backend authentication.
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final response = await _api.post(
+        'login/',
+        {
+          'email': email.trim(),
+          'password': password,
+        },
+      );
 
-    _loggedIn = true;
-    _userEmail = email;
+      debugPrint('LOGIN RESPONSE: $response');
 
-    debugPrint('Logged in as $email');
+      final accessToken = response['token'];
 
-    return true;
+      if (accessToken == null ||
+          accessToken.toString().isEmpty) {
+        debugPrint('ERROR: Access token missing from response');
+        return 'Login failed: access token was not received.';
+      }
+
+      _token = accessToken.toString();
+
+      _api.token = _token;
+
+      final user = response['user'];
+
+      if (user != null) {
+        _username = user['username'];
+        _email = user['email'];
+      }
+
+      debugPrint('Login successful');
+      debugPrint('Username: $_username');
+      debugPrint('Email: $_email');
+      debugPrint('Token received: ${_token != null}');
+      debugPrint('Token length: ${_token!.length}');
+
+      return null;
+    } catch (e) {
+      debugPrint('Login failed: $e');
+      return 'Invalid email or password.';
+    }
   }
 
-  Future<bool> signup({
-    required String name,
-    required String email,
-    required String password,
-  }) async {
-    // TODO: Replace with backend signup.
-    await Future.delayed(const Duration(seconds: 1));
+  Future<Map<String, dynamic>> getProfile() async {
+    final response = await _api.get('profile/');
 
-    debugPrint('Created account for $email');
-
-    return true;
+    return Map<String, dynamic>.from(response);
   }
 
   Future<void> logout() async {
-    _loggedIn = false;
-    _userEmail = null;
+    _token = null;
+    _username = null;
+    _email = null;
+    _api.token = null;
 
     debugPrint('User logged out');
-  }
-
-  Future<bool> sendOtp(String email) async {
-    // TODO: Connect to backend OTP service.
-    await Future.delayed(const Duration(seconds: 1));
-
-    debugPrint('OTP sent to $email');
-
-    return true;
-  }
-
-  Future<bool> verifyOtp(String otp) async {
-    // TODO: Verify OTP with backend.
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    debugPrint('OTP verified');
-
-    return true;
-  }
-
-  Future<bool> resetPassword({
-    required String email,
-    required String newPassword,
-  }) async {
-    // TODO: Connect to backend reset password API.
-    await Future.delayed(const Duration(seconds: 1));
-
-    debugPrint('Password reset for $email');
-
-    return true;
   }
 }

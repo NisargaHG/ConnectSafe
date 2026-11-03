@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../services/emergency_contact_service.dart';
 import 'add_contact_screen.dart';
 import 'edit_contact_screen.dart';
 import 'widgets/contact_card.dart';
@@ -14,16 +15,44 @@ class ContactsScreen extends StatefulWidget {
 }
 
 class _ContactsScreenState extends State<ContactsScreen> {
-  final List<Map<String, String>> contacts = [
-    {
-      "name": "John Doe",
-      "phone": "+91 9876543210",
-    },
-    {
-      "name": "Jane Smith",
-      "phone": "+91 9123456780",
-    },
-  ];
+  List<dynamic> contacts = [];
+
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadContacts();
+  }
+
+  Future<void> loadContacts() async {
+    try {
+      final result =
+      await EmergencyContactService.instance.getContacts();
+
+      if (!mounted) return;
+
+      setState(() {
+        contacts = result;
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('CONTACT LOAD FAILED: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load contacts: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,13 +74,17 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => const AddContactScreen(),
             ),
           );
+
+          if (result == true) {
+            loadContacts();
+          }
         },
         child: const Icon(
           Icons.add,
@@ -59,41 +92,70 @@ class _ContactsScreenState extends State<ContactsScreen> {
         ),
       ),
 
-      body: contacts.isEmpty
+      body: isLoading
+          ? const Center(
+        child: CircularProgressIndicator(),
+      )
+          : contacts.isEmpty
           ? const EmptyContacts()
-          : ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: contacts.length,
-        itemBuilder: (context, index) {
-          final contact = contacts[index];
+          : RefreshIndicator(
+        onRefresh: loadContacts,
+        child: ListView.builder(
+          padding: const EdgeInsets.all(20),
+          itemCount: contacts.length,
+          itemBuilder: (context, index) {
+            final contact = contacts[index];
 
-          return ContactCard(
-            name: contact["name"]!,
-            phone: contact["phone"]!,
-            onEdit: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditContactScreen(
-                    name: contact["name"]!,
-                    phone: contact["phone"]!,
+            return ContactCard(
+              id: int.parse(contact['id'].toString()),
+              name: contact['name']?.toString() ?? '',
+              phone: contact['phone']?.toString() ?? '',
+              onEdit: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditContactScreen(
+                      id: int.parse(contact['id'].toString()),
+                      name: contact['name']?.toString() ?? '',
+                      phone: contact['phone']?.toString() ?? '',
+                    ),
                   ),
-                ),
-              );
-            },
-            onDelete: () {
-              setState(() {
-                contacts.removeAt(index);
-              });
+                );
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Contact deleted"),
-                ),
-              );
-            },
-          );
-        },
+                if (result == true) {
+                  loadContacts();
+                }
+              },
+              onDelete: () async {
+                try {
+                  await EmergencyContactService.instance.deleteContact(
+                    int.parse(contact['id'].toString()),
+                  );
+
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Contact deleted successfully"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+
+                  loadContacts();
+                } catch (e) {
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Failed to delete contact: $e"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            );
+          },
+        ),
       ),
     );
   }

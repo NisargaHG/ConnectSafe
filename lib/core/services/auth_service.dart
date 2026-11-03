@@ -53,6 +53,7 @@ class AuthService {
         password: password,
       );
 
+
       return null;
     } on FirebaseAuthException catch (e) {
       return e.message ?? 'Login failed.';

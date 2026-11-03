@@ -43,3 +43,18 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Python / Django
+__pycache__/
+*.py[cod]
+venv/
+venv312/
+.venv/
+env/
+.env
+.env.*
+!.env.example
+db.sqlite3
+*.sqlite3
+staticfiles/
+media/
